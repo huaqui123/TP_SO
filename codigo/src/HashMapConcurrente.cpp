@@ -8,6 +8,8 @@
 
 #include "HashMapConcurrente.hpp"
 
+std::mutex mtxIncMax;
+
 HashMapConcurrente::HashMapConcurrente() {
     for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
         tabla[i] = new ListaAtomica<hashMapPair>();
@@ -35,30 +37,33 @@ void HashMapConcurrente::incrementar(std::string clave) {
     }
 
     // FALTA
+    // Create mutex array for each letter
+    std::mutex mtx[HashMapConcurrente::cantLetras]; // Chequear
+
     // Tenemos que hacer un array de mutex para que en cada letra tiramos lock y unlock
     mtx[index].lock();
-
-    ListaAtomica<hashMapPair> l = _tabla[index];
+    mtxIncMax.lock();
+    ListaAtomica<hashMapPair> *l = tabla[index];
     hashMapPair par = std::make_pair(clave, 1);
-    if (l.longitud == 0){
-        l.insertar( par);
+    if (l -> longitud() == 0){
+        l -> insertar(par);
     } else {
         bool exit = false;
-        auto iter = l.begin();
-        while (iter != nullptr) {
-            if (iter*.first == clave) {
-                iter*.second += 1;
+        auto iter = l -> begin();
+        while (&iter.operator++ != nullptr) {
+            if (&(iter.operator*) == clave) {
+                iter._nodo_sig += 1;
                 exit = true;
             }
             if (exit)
                 break;
-            iter++;
+            iter.operator++;
         }
         if (!exit) {
-            l.insertar(par);
+            l -> insertar(par);
         }
     }
-
+    mtxIncMax.unlock();
     mtx[index].unlock();
     return;
 
@@ -93,6 +98,10 @@ hashMapPair HashMapConcurrente::maximo() {
     hashMapPair *max = new hashMapPair();
     max->second = 0;
 
+    // Para que no haya inconsistencias en caso de que maximo
+    // se ejecuta concurrentemente con incrementar, creamos un 
+    // mutex que se usa en estas dos funciones.
+    mtxIncMax.lock();
     for (unsigned int index = 0; index < HashMapConcurrente::cantLetras; index++) {
         for (auto &p : *tabla[index]) {
             if (p.second > max->second) {
@@ -101,6 +110,7 @@ hashMapPair HashMapConcurrente::maximo() {
             }
         }
     }
+    mtxIncMax.unlock();
 
     return *max;
 }
@@ -109,6 +119,8 @@ hashMapPair HashMapConcurrente::maximo() {
 
 hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
     // Completar (Ejercicio 3)
+    hashMapPair *max = new hashMapPair();
+    return *max;
 }
 
 #endif
