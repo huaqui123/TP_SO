@@ -50,14 +50,14 @@ void HashMapConcurrente::incrementar(std::string clave) {
     } else {
         bool exit = false;
         auto iter = l -> begin();
-        while (&iter.operator++ != nullptr) {
-            if (&(iter.operator*) == clave) {
-                iter._nodo_sig += 1;
+        for (unsigned int i = 0; i < l -> longitud(); i++) {
+            if (iter.operator*().first == clave) {
+                iter.operator*().second += 1;
                 exit = true;
             }
             if (exit)
                 break;
-            iter.operator++;
+            iter.operator++();
         }
         if (!exit) {
             l -> insertar(par);
@@ -70,26 +70,26 @@ void HashMapConcurrente::incrementar(std::string clave) {
 }
 
 std::vector<std::string> HashMapConcurrente::claves() {
-    std::vector<std::string> res = new std::vector<std::string>();
+    std::vector<std::string> *res = new std::vector<std::string>();
+
     for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
-        auto iter = tabla[i].begin();
-        while (iter != nullptr) {
-            res.push(iter*.first == clave);
-            iter++;
+        auto iter = tabla[i] -> begin();
+        for (unsigned int j = 0; j < tabla[i] -> longitud(); j++) {
+            res -> push_back(iter.operator*().first);
+            iter.operator++();
         }
     }
-    return res;
+    return *res;
 }
 
 unsigned int HashMapConcurrente::valor(std::string clave) {
-    int res = -1;
-    int index = getInted(clave);
-    auto iter = tabla[index].begin();
-    while (iter != nullptr) {
-        if (iter*.first == clave) {
-            return iter*.second;
+    int index = getIndex(clave);
+    auto iter = tabla[index] -> begin();
+    for (unsigned int i = 0; i < tabla[index] -> longitud(); i++) {
+        if (iter.operator*().first == clave) {
+            return iter.operator*().second;
         }
-        iter++;
+        iter.operator++();
     }
     return 0;
 }
