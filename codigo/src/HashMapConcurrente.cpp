@@ -115,11 +115,55 @@ hashMapPair HashMapConcurrente::maximo() {
     return *max;
 }
 
-
-
+void fn(hashMapPair *max, std::atomic<int> *filas, std::mutex *mtx){
+    
+}
 hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
     // Completar (Ejercicio 3)
     hashMapPair *max = new hashMapPair();
+    max->second = 0; // Max actual
+
+    std::atomic<int> filasTerminadas{0}; // Contador de filas terminadas
+    std::mutex mtx;
+
+    std::vector<std::thread> threads(cant_threads);
+
+    for (auto &t: threads){
+        // t = threads(test, &filasTerminadas, &mtx);
+        t = std::thread([=, &filasTerminadas, &mtx, &max] (){
+            while (filasTerminadas.load() < HashMapConcurrente::cantLetras) // Quedan filas por procesar
+            {
+                // Busco el maximo de esa fila
+                // mtx -> lock();
+                int index = filasTerminadas.load();
+                // mtx -> unlock();
+                filasTerminadas.fetch_add(1);
+
+                hashMapPair *maxLocal = new hashMapPair();
+                maxLocal->second = 0;
+                // for (auto &p : tabla[index]) {
+                //     if (p.second > maxLocal->second) {
+                //         maxLocal->first = p.first;
+                //         maxLocal->second = p.second;
+                //     }
+                // }
+
+                mtx.lock();
+                // if (maxLocal -> second > max -> second){
+                //     max -> first = maxLocal -> first;
+                //     max -> second = maxLocal -> second;
+                // }
+                mtx.unlock();
+            }
+
+            return 0;
+        });
+    }
+
+    for (auto &t : threads){
+        t.join();
+    }
+
     return *max;
 }
 

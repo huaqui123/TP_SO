@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <mutex>
 
 template<typename T>
 class ListaAtomica {
