@@ -46,10 +46,23 @@ void cargarMultiplesArchivos(
 ) {
     // Completar (Ejercicio 4)
     std::vector<std::thread> threads(cantThreads);
+
+    std::atomic<int> resto{filePaths.size() % cantThreads};
+    int cant_files_per_thread = filePaths.size() / cantThreads;
+
     int i = 0;
     while (i < threads.size()){
-        threads[i] = std::thread([=, i, filePaths, &hashMap] (){
-            cargarArchivo(hashMap, filePaths[i]);
+        threads[i] = std::thread([=, i, filePaths, &hashMap, &resto, cant_files_per_thread] (){
+            int j = 0;
+            while (j < cant_files_per_thread) {
+                cargarArchivo(hashMap, filePaths[i * cant_files_per_thread + j]);
+                j++;
+            }
+            j = 0;
+            while(resto.load() > 0) {
+                int index = resto.fetch_add(-1);
+                cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index]);
+            }
             return 0;
         });
         i++;
