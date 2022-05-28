@@ -41,17 +41,22 @@ void HashMapConcurrente::incrementar(std::string clave) {
     // Create mutex array for each letter
     // Tenemos que hacer un array de mutex para que en cada letra tiramos lock y unlock
     mtx[index].lock();
-    //mtxIncMax.lock();
     ListaAtomica<hashMapPair> *l = tabla[index];
     hashMapPair par = std::make_pair(clave, 1);
+
+    // Uso el mtxIncMax en el momento que realizamos el insertar para evitar que agregue interrumpiendo el max
     if (l -> longitud() == 0){
-        l -> insertar(par);
+            mtxIncMax.lock();
+            l -> insertar(par);
+            mtxIncMax.unlock();
     } else {
         bool exit = false;
         auto iter = l -> begin();
         for (unsigned int i = 0; i < l -> longitud(); i++) {
             if (iter.operator*().first == clave) {
+                mtxIncMax.lock();
                 iter.operator*().second += 1;
+                mtxIncMax.unlock();
                 exit = true;
             }
             if (exit)
@@ -59,10 +64,11 @@ void HashMapConcurrente::incrementar(std::string clave) {
             iter.operator++();
         }
         if (!exit) {
+            mtxIncMax.lock();
             l -> insertar(par);
+            mtxIncMax.unlock();
         }
     }
-    //mtxIncMax.unlock();
     mtx[index].unlock();
     return;
 
@@ -122,37 +128,36 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
     hashMapPair *max = new hashMapPair();
     max->second = 0; // Max actual
 
-    std::atomic<int> filasTerminadas{0}; // Contador de filas terminadas
-    std::mutex mtx;
-
     std::vector<std::thread> threads(cant_threads);
+    std::atomic<int> indice{0}; // Contador de filas terminadas
+
+    std::mutex mtx_max;
 
     for (auto &t: threads){
         // t = threads(test, &filasTerminadas, &mtx);
-        t = std::thread([=, &filasTerminadas, &mtx, &max] (){
-            while (filasTerminadas.load() < HashMapConcurrente::cantLetras) // Quedan filas por procesar
+        t = std::thread([=, &indice, &mtx_max, &max] (){
+            while (indice.load() < HashMapConcurrente::cantLetras) // Quedan filas por procesar
             {
                 // Busco el maximo de esa fila
-                // mtx -> lock();
-                //int index = filasTerminadas.load();
-                // mtx -> unlock();
-                filasTerminadas.fetch_add(1);
+                mtx_max.lock();
+                int index = indice.fetch_add(1);
+                mtx_max.unlock();
 
                 hashMapPair *maxLocal = new hashMapPair();
                 maxLocal->second = 0;
-                // for (auto &p : tabla[index]) {
-                //     if (p.second > maxLocal->second) {
-                //         maxLocal->first = p.first;
-                //         maxLocal->second = p.second;
-                //     }
-                // }
+                for (auto &p : *tabla[index]) {
+                    if (p.second > maxLocal->second) {
+                        maxLocal->first = p.first;
+                        maxLocal->second = p.second;
+                    }
+                }
 
-                mtx.lock();
-                // if (maxLocal -> second > max -> second){
-                //     max -> first = maxLocal -> first;
-                //     max -> second = maxLocal -> second;
-                // }
-                mtx.unlock();
+                mtx_max.lock();
+                if (maxLocal -> second > max -> second){
+                    max -> first = maxLocal -> first;
+                    max -> second = maxLocal -> second;
+                }
+                mtx_max.unlock();
             }
 
             return 0;
