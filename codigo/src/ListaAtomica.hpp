@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <mutex>
 
 template<typename T>
 class ListaAtomica {
@@ -32,11 +33,11 @@ class ListaAtomica {
 
     void insertar(const T &valor) {
         // Completar (Ejercicio 1)
-        Nodo node = new Nodo(valor);
+        Nodo *node = new Nodo(valor);
 
         mtx.lock();
-        node._siguiente = _cabeza.load();
-        _cabeza = &node;
+        node -> _siguiente = _cabeza.load();
+        _cabeza = node;
         mtx.unlock();
     }
 
