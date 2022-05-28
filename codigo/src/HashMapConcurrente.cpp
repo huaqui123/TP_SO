@@ -9,6 +9,7 @@
 #include "HashMapConcurrente.hpp"
 
 std::mutex mtxIncMax;
+std::mutex mtx[HashMapConcurrente::cantLetras]; // Chequear
 
 HashMapConcurrente::HashMapConcurrente() {
     for (unsigned int i = 0; i < HashMapConcurrente::cantLetras; i++) {
@@ -36,13 +37,11 @@ void HashMapConcurrente::incrementar(std::string clave) {
         return;
     }
 
-    // FALTA
+    // Checkear que onda
     // Create mutex array for each letter
-    std::mutex mtx[HashMapConcurrente::cantLetras]; // Chequear
-
     // Tenemos que hacer un array de mutex para que en cada letra tiramos lock y unlock
     mtx[index].lock();
-    mtxIncMax.lock();
+    //mtxIncMax.lock();
     ListaAtomica<hashMapPair> *l = tabla[index];
     hashMapPair par = std::make_pair(clave, 1);
     if (l -> longitud() == 0){
@@ -63,7 +62,7 @@ void HashMapConcurrente::incrementar(std::string clave) {
             l -> insertar(par);
         }
     }
-    mtxIncMax.unlock();
+    //mtxIncMax.unlock();
     mtx[index].unlock();
     return;
 
@@ -135,7 +134,7 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
             {
                 // Busco el maximo de esa fila
                 // mtx -> lock();
-                int index = filasTerminadas.load();
+                //int index = filasTerminadas.load();
                 // mtx -> unlock();
                 filasTerminadas.fetch_add(1);
 

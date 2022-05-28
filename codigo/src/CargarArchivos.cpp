@@ -1,6 +1,7 @@
 #ifndef CHM_CPP
 #define CHM_CPP
 
+#include <thread>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -24,6 +25,7 @@ int cargarArchivo(
     }
     while (file >> palabraActual) {
         // Completar (Ejercicio 4)
+        hashMap.incrementar(palabraActual);
         cant++;
     }
     // Cierro el archivo.
@@ -43,6 +45,20 @@ void cargarMultiplesArchivos(
     std::vector<std::string> filePaths
 ) {
     // Completar (Ejercicio 4)
+    std::vector<std::thread> threads(cantThreads);
+    int i = 0;
+    while (i < threads.size()){
+        threads[i] = std::thread([=, i, filePaths, &hashMap] (){
+            cargarArchivo(hashMap, filePaths[i]);
+            return 0;
+        });
+        i++;
+    }
+
+    for (auto &t : threads){
+        t.join();
+    }
+
 }
 
 #endif
