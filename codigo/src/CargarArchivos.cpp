@@ -52,7 +52,7 @@ void cargarMultiplesArchivos(
 
     int i = 0;
     while (i < threads.size()){
-        threads[i] = std::thread([=, i, filePaths, &hashMap, &resto, cant_files_per_thread] (){
+        threads[i] = std::thread([=, &hashMap, &resto] (){
             int j = 0;
             while (j < cant_files_per_thread) {
                 cargarArchivo(hashMap, filePaths[i * cant_files_per_thread + j]);
@@ -61,7 +61,9 @@ void cargarMultiplesArchivos(
             j = 0;
             while(resto.load() > 0) {
                 int index = resto.fetch_add(-1);
-                cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index]);
+                if (index > 0){
+                    cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index - 1]);
+                }
             }
             return 0;
         });
