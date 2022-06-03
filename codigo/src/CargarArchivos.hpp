@@ -10,7 +10,8 @@
 
 int cargarArchivo(
     HashMapConcurrente &hashMap,
-    std::string filePath
+    std::string filePath,
+    int i
 );
 
 void cargarMultiplesArchivos(

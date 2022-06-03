@@ -11,13 +11,15 @@
 
 int cargarArchivo(
     HashMapConcurrente &hashMap,
-    std::string filePath
+    std::string filePath,
+    int i
 ) {
     std::fstream file;
     int cant = 0;
     std::string palabraActual;
 
     // Abro el archivo.
+    std::cout << "Thread "<< i << " cargando archivo: " << filePath << std::endl;
     file.open(filePath, file.in);
     if (!file.is_open()) {
         std::cerr << "Error al abrir el archivo '" << filePath << "'" << std::endl;
@@ -25,7 +27,7 @@ int cargarArchivo(
     }
     while (file >> palabraActual) {
         // Completar (Ejercicio 4)
-        hashMap.incrementar(palabraActual);
+        // hashMap.incrementar(palabraActual);
         cant++;
     }
     // Cierro el archivo.
@@ -55,16 +57,17 @@ void cargarMultiplesArchivos(
         threads[i] = std::thread([=, &hashMap, &resto] (){
             int j = 0;
             while (j < cant_files_per_thread) {
-                cargarArchivo(hashMap, filePaths[i * cant_files_per_thread + j]);
+                cargarArchivo(hashMap, filePaths[i * cant_files_per_thread + j], i);
                 j++;
             }
             j = 0;
             while(resto.load() > 0) {
                 int index = resto.fetch_add(-1);
                 if (index > 0){
-                    cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index - 1]);
+                    cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index - 1], i);
                 }
             }
+            std::cout << "Thread "<< i << " a terminado" << std::endl;
             return 0;
         });
         i++;
