@@ -45,6 +45,7 @@ void cargarMultiplesArchivos(
     std::vector<std::string> filePaths
 ) {
     // Completar (Ejercicio 4)
+    
     std::vector<std::thread> threads(cantThreads);
 
     std::atomic<int> resto{filePaths.size() % cantThreads};
