@@ -13,6 +13,10 @@ using namespace std;
 
 #define BILLION  1000000000L;
 
+double tiempoElapsado;
+struct timespec start, stop;
+vector<string> filePaths = {};
+
 void crearArchivos(){
     ofstream file1("../archivos/exp1.txt");
     for(int i = 0; i < 1000000; ++i){
@@ -27,26 +31,51 @@ void crearArchivos(){
     file2.close();
 }
 
-double calcularTiempo(string msg, struct timespec start, struct timespec stop){
+void calcularTiempo(int threads, struct timespec start, struct timespec stop){
     if (stop.tv_nsec < start.tv_nsec) {
         stop.tv_nsec += 1000000000;
         stop.tv_sec--;
     }
-    std::cout << msg << "\n";
+    std::cout << "Tiempo elapsado " << threads << " threads" << std::endl;
     printf("%ld.%09ld\n", (long)(stop.tv_sec - start.tv_sec),
         stop.tv_nsec - start.tv_nsec);
-    // return  ( stop.tv_sec - start.tv_sec ) 
-    //         + ( stop.tv_nsec - start.tv_nsec )
-    //         / 1.0e6;
+}
+
+HashMapConcurrente correrCargarArchivosConNThreads(int threads){
+    HashMapConcurrente hashMap1{}; // = HashMapConcurrente();
+    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    cargarMultiplesArchivos(hashMap1, threads, filePaths);
+    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    calcularTiempo(threads, start, stop);
+    return hashMap1;
+}
+
+void correrMaximoParaleloConNThreads(int threads, HashMapConcurrente hashMap1){
+    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    auto maximo = hashMap1.maximoParalelo(threads);
+    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    std::cout << maximo.first << " " << maximo.second << std::endl;
+    calcularTiempo(threads, start, stop);
 }
 
 void experimento1(){
     // Experimento 1
     // Con el doble de threads deberia tardar la mitad de tiempo
-    double tiempoElapsado;
-    struct timespec start, stop;
-    vector<string> filePaths = {};
-
+    
+    HashMapConcurrente hashMap;
+    
     filePaths.push_back("../archivos/exp1.txt");
     filePaths.push_back("../archivos/exp2.txt");
     filePaths.push_back("../archivos/exp3.txt");
@@ -56,56 +85,17 @@ void experimento1(){
     filePaths.push_back("../archivos/exp7.txt");
     filePaths.push_back("../archivos/exp8.txt");
 
-    // Cargar archivos 1 thread
-    HashMapConcurrente hashMap1{}; // = HashMapConcurrente();
-    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    cargarMultiplesArchivos(hashMap1, 1, filePaths);
-    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    calcularTiempo("Tiempo elapsado 1 thread:", start, stop);
+    // Cargar archivos con 1 thread
+    hashMap = correrCargarArchivosConNThreads(1);
 
-    // Calcular maximo 1 thread
-    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    auto maximo = hashMap1.maximoParalelo(1);
-    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    std::cout << maximo.first << " " << maximo.second << std::endl;
-    calcularTiempo("Tiempo elapsado 1 thread:", start, stop);
+    // Calcular maximo con 1 thread
+    correrMaximoParaleloConNThreads(1, hashMap);
 
-    HashMapConcurrente hashMap{}; // = HashMapConcurrente();
-    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    cargarMultiplesArchivos(hashMap, 8, filePaths);
-    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    calcularTiempo("Tiempo elapsado 8 threads:", start, stop);
+    // Cargar archivos con 8 threads
+    hashMap = correrCargarArchivosConNThreads(8);
 
-    // Calcular maximo 8 threads
-    if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    maximo = hashMap.maximoParalelo(8);
-    if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
-      perror( "clock gettime" );
-      exit( EXIT_FAILURE );
-    }
-    std::cout << maximo.first << " " << maximo.second << std::endl;
-    calcularTiempo("Tiempo elapsado 1 thread:", start, stop);
+    // Calcular maximo con 8 threads
+    correrMaximoParaleloConNThreads(8, hashMap);
 }
 
 int main(int argc, char **argv) {

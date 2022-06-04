@@ -46,17 +46,17 @@ void HashMapConcurrente::incrementar(std::string clave) {
 
     // Uso el mtxIncMax en el momento que realizamos el insertar para evitar que agregue interrumpiendo el max
     if (l -> longitud() == 0){
-            mtxIncMax.lock();
+            // mtxIncMax.lock();
             l -> insertar(par);
-            mtxIncMax.unlock();
+            // mtxIncMax.unlock();
     } else {
         bool exit = false;
         auto iter = l -> begin();
         for (unsigned int i = 0; i < l -> longitud(); i++) {
             if (iter.operator*().first == clave) {
-                mtxIncMax.lock();
+                // mtxIncMax.lock();
                 iter.operator*().second += 1;
-                mtxIncMax.unlock();
+                // mtxIncMax.unlock();
                 exit = true;
             }
             if (exit)
@@ -64,9 +64,9 @@ void HashMapConcurrente::incrementar(std::string clave) {
             iter.operator++();
         }
         if (!exit) {
-            mtxIncMax.lock();
+            // mtxIncMax.lock();
             l -> insertar(par);
-            mtxIncMax.unlock();
+            // mtxIncMax.unlock();
         }
     }
     mtx[index].unlock();

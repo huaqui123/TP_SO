@@ -33,9 +33,8 @@ class ListaAtomica {
 
     void insertar(const T &valor) {
         // Completar (Ejercicio 1)
-        Nodo *node = new Nodo(valor);
-
         mtx.lock();
+        Nodo *node = new Nodo(valor);
         node -> _siguiente = _cabeza.load();
         _cabeza = node;
         mtx.unlock();
