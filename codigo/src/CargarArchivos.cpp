@@ -45,7 +45,7 @@ void cargarMultiplesArchivos(
     std::vector<std::string> filePaths
 ) {
     // Completar (Ejercicio 4)
-    
+
     std::vector<std::thread> threads(cantThreads);
 
     std::atomic<int> resto{filePaths.size() % cantThreads};
@@ -66,7 +66,7 @@ void cargarMultiplesArchivos(
                     cargarArchivo(hashMap, filePaths[cant_files_per_thread * cantThreads + index - 1]);
                 }
             }
-            std::cout << "Thread "<< i << " a terminado" << std::endl;
+            //std::cout << "Thread "<< i << " a terminado" << std::endl;
             return 0;
         });
         i++;

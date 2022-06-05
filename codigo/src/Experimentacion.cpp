@@ -15,9 +15,9 @@ using namespace std;
 
 double tiempoElapsado;
 struct timespec start, stop;
+struct timespec start_experimento, stop_experimento;
 vector<string> filePaths = {};
-
-vector<vector<string>> tiemposEjecutados = {};
+int max_threads = 8;
 
 void crearArchivos(){
     ofstream file1("./archivos/exp1.txt");
@@ -38,9 +38,9 @@ void calcularTiempo(int threads, struct timespec start, struct timespec stop, st
         stop.tv_nsec += 1000000000;
         stop.tv_sec--;
     }
-    std::cout << "Tiempo elapsado con " << threads << " threads ejecutando " << origen << std::endl;
+    /* std::cout << "Tiempo elapsado con " << threads << " threads ejecutando " << origen << std::endl;
     printf("%ld.%09ld\n", (long)(stop.tv_sec - start.tv_sec),
-        stop.tv_nsec - start.tv_nsec);
+        stop.tv_nsec - start.tv_nsec); */
     ofstream myfile;
     myfile.open ("./archivos/muestra.csv", std::ios_base::app | std::ios_base::out);
     myfile << origen + "," + std::to_string(threads) + "," + std::to_string((long)(stop.tv_sec - start.tv_sec)) + "." +
@@ -73,24 +73,27 @@ void correrMaximoParaleloConNThreads(int threads, HashMapConcurrente hashMap1){
       perror( "clock gettime" );
       exit( EXIT_FAILURE );
     }
-    std::cout << maximo.first << " " << maximo.second << std::endl;
+    //std::cout << maximo.first << " " << maximo.second << std::endl;
     calcularTiempo(threads, start, stop, "Máximo");
 }
 
 void experimento1(){
     // Experimento 1
-    // Con el doble de threads deberia tardar la mitad de tiempo
-    cout << "Entramos experimento 1" << endl;
-
-    int max_threads = 8;
-    for (int i = 0; i < max_threads; i++) {
-        tiemposEjecutados.push_back(vector<string>{});
-        tiemposEjecutados[i].push_back("");
-        tiemposEjecutados[i].push_back("");
-    }
-    
+    // Con el doble de threads deberia tardar la mitad de tiempo    
     HashMapConcurrente hashMap;
-    
+
+
+    for (int i = 1; i < max_threads + 1; i++) {
+        // Cargar archivos con i thread
+        hashMap = correrCargarArchivosConNThreads(i);
+
+        // Calcular maximo con i thread
+        correrMaximoParaleloConNThreads(i, hashMap);
+    }
+
+}
+
+void CreamosVectorFiles() {
     filePaths.push_back("./archivos/exp1.txt");
     filePaths.push_back("./archivos/exp2.txt");
     filePaths.push_back("./archivos/exp3.txt");
@@ -99,36 +102,32 @@ void experimento1(){
     filePaths.push_back("./archivos/exp6.txt");
     filePaths.push_back("./archivos/exp7.txt");
     filePaths.push_back("./archivos/exp8.txt");
-
-
-    for (int i = 1; i < max_threads + 1; i++) {
-    // Cargar archivos con i thread
-    hashMap = correrCargarArchivosConNThreads(i);
-
-    // Calcular maximo con i thread
-    correrMaximoParaleloConNThreads(i, hashMap);
-    }
-/* 
-    // Cargar archivos con 1 thread
-    hashMap = correrCargarArchivosConNThreads(1);
-
-    // Calcular maximo con 1 thread
-    correrMaximoParaleloConNThreads(1, hashMap);
-
-    // Cargar archivos con 8 threads
-    hashMap = correrCargarArchivosConNThreads(8);
-
-    // Calcular maximo con 8 threads
-    correrMaximoParaleloConNThreads(8, hashMap); */
 }
 
 int main(int argc, char **argv) {
     
+    CreamosVectorFiles();
+
     ofstream myfile;
     myfile.open ("./archivos/muestra.csv");
     myfile << "accion,threads,tiempo\n";
     myfile.close();
-    cout << "Ejecutando experimento 1" << endl;
-    experimento1();
+    cout << "Ejecutando experimentos" << endl;
+    for (int i = 0; i < 1000; i++) {
+        
+        if( clock_gettime( CLOCK_REALTIME, &start_experimento) == -1 ) {
+          perror( "clock gettime" );
+          exit( EXIT_FAILURE );
+        }
+        cout << "Ejecutando experimento " << i + 1 << endl;
+        experimento1();
+        if( clock_gettime( CLOCK_REALTIME, &stop_experimento) == -1 ) {
+          perror( "clock gettime" );
+          exit( EXIT_FAILURE );
+        }
+        printf("Tiempo de ejecucion %d: %ld.%09ld\n", i + 1, (long)(stop_experimento.tv_sec - start_experimento.tv_sec),
+        (stop_experimento.tv_nsec - start_experimento.tv_nsec) < 0 ?
+        999999999 + (stop_experimento.tv_nsec - start_experimento.tv_nsec) : (stop_experimento.tv_nsec - start_experimento.tv_nsec));
+    }
     return 0;
 }
