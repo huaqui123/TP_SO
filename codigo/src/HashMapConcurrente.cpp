@@ -146,9 +146,7 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
             {
                 // Busco el maximo de esa fila
                 int index = indice.fetch_add(1);
-                if (index >= 26){
-
-                }else{
+                if (index < 26){
                     hashMapPair *maxLocal = new hashMapPair();
                     maxLocal->second = 0;
                     mtx_max.lock();
