@@ -146,22 +146,30 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
             {
                 // Busco el maximo de esa fila
                 int index = indice.fetch_add(1);
+                if (index >= 26){
 
-                hashMapPair *maxLocal = new hashMapPair();
-                maxLocal->second = 0;
-                for (auto &p : *tabla[index]) {
-                    if (p.second > maxLocal->second) {
-                        maxLocal->first = p.first;
-                        maxLocal->second = p.second;
+                }else{
+                    hashMapPair *maxLocal = new hashMapPair();
+                    maxLocal->second = 0;
+                    mtx_max.lock();
+                    if (index == 26){
+                        std::cout << " " << index << " " << std::endl;
                     }
-                }
+                    mtx_max.unlock();
+                    for (auto &p : *tabla[index]) {
+                        if (p.second > maxLocal->second) {
+                            maxLocal->first = p.first;
+                            maxLocal->second = p.second;
+                        }
+                    }
 
-                mtx_max.lock();
-                if (maxLocal -> second > max -> second){
-                    max -> first = maxLocal -> first;
-                    max -> second = maxLocal -> second;
+                    mtx_max.lock();
+                    if (maxLocal -> second > max -> second){
+                        max -> first = maxLocal -> first;
+                        max -> second = maxLocal -> second;
+                    }
+                    mtx_max.unlock();
                 }
-                mtx_max.unlock();
             }
 
             return 0;
