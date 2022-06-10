@@ -149,11 +149,6 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
                 if (index < 26){
                     hashMapPair *maxLocal = new hashMapPair();
                     maxLocal->second = 0;
-                    mtx_max.lock();
-                    if (index == 26){
-                        std::cout << " " << index << " " << std::endl;
-                    }
-                    mtx_max.unlock();
                     for (auto &p : *tabla[index]) {
                         if (p.second > maxLocal->second) {
                             maxLocal->first = p.first;
@@ -169,7 +164,6 @@ hashMapPair HashMapConcurrente::maximoParalelo(unsigned int cant_threads) {
                     mtx_max.unlock();
                 }
             }
-
             return 0;
         });
     }
