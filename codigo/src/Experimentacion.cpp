@@ -107,7 +107,6 @@ void experimento2(){
 
     HashMapConcurrente hashMap{};
 
-    // vector<string> archivos = {"../archivos/randomWords.txt"};
     cargarArchivo(hashMap, "../archivos/commonWords.txt");
 
     cout << hashMap.maximo().first << endl;
@@ -121,6 +120,29 @@ void experimento2(){
         }
     }
         
+}
+
+void experimento3(){
+    // Experimento 3
+    ofstream myfile;
+    myfile.open ("../archivos/cargaIneficiente.csv");
+    myfile << "accion,threads,tiempo\n";
+    myfile.close();
+
+    HashMapConcurrente hashMap{};
+    filePaths = {};
+    for (int i = 0; i < 8; i++){
+        filePaths.push_back("../archivos/exp2.txt");
+    }
+    
+    for (int i = 1; i < 9; i++){
+        cout << "Ejecutando con: " << i << " threads" << endl;
+        for (int j = 0; j < 10; j++){
+            cout << "Iteracion: " << j << endl;
+            correrCargarArchivosConNThreads(i, "../archivos/cargaIneficiente.csv");
+        }
+    }
+    
 }
 
 void CreamosVectorFiles() {
@@ -156,6 +178,9 @@ int main(int argc, char **argv) {
     //     999999999 + (stop_experimento.tv_nsec - start_experimento.tv_nsec) : (stop_experimento.tv_nsec - start_experimento.tv_nsec));
     // }
 
-    experimento2();
+    // experimento2();
+
+    experimento3();
+
     return 0;
 }
