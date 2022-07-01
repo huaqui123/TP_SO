@@ -33,10 +33,14 @@ class ListaAtomica {
 
     void insertar(const T &valor) {
         // Completar (Ejercicio 1)
+        //HAY QUE VER BIEN QUE ONDA EL COMPARE_EXCHANGE
         Nodo *node = new Nodo(valor);
         mtx.lock();
         node -> _siguiente = _cabeza.load();
         _cabeza = node;
+        /* while (!this->_cabeza.compare_exchange_weak(this->_cabeza,node)){
+
+        } */
         mtx.unlock();
     }
 

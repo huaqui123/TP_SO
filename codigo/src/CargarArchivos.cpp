@@ -38,7 +38,6 @@ int cargarArchivo(
     return cant;
 }
 
-
 void cargarMultiplesArchivos(
     HashMapConcurrente &hashMap,
     unsigned int cantThreads,
@@ -48,12 +47,18 @@ void cargarMultiplesArchivos(
 
     std::vector<std::thread> threads(cantThreads);
 
-    std::atomic<int> resto{filePaths.size() % cantThreads};
+    /* std::atomic<int> resto{filePaths.size() % cantThreads};
     int cant_files_per_thread = filePaths.size() / cantThreads;
 
     int i = 0;
     while (i < threads.size()){
+        Draf de idea
+        Leemos el archivo como en cargarArchivo y va agarrando c/u
+        Cuando hay que cambiar de archivo tiramos un lock en la variable del archivo y el encargado se encarga de cambiar
+
+        
         threads[i] = std::thread([=, &hashMap, &resto] (){
+            
             int j = 0;
             while (j < cant_files_per_thread) {
                 cargarArchivo(hashMap, filePaths[i * cant_files_per_thread + j]);
@@ -70,8 +75,44 @@ void cargarMultiplesArchivos(
             return 0;
         });
         i++;
+    } */
+    int i = 0;
+    std::mutex mtx_file;
+    std::fstream file;
+    file.open(filePaths[0], file.in);
+    if (!file.is_open()) {
+        std::cerr << "Error al abrir el archivo '" << filePaths[0] << "'" << std::endl;
     }
+    std::atomic<int> nroArchivo{1};
+    while (i < threads.size()){
+        threads[i] = std::thread([=, &hashMap, &mtx_file, &nroArchivo, &file] (){
+        std::string palabraActual;
+        while(nroArchivo.load() < filePaths.size()){
+            while (file >> palabraActual) {
+                hashMap.incrementar(palabraActual);
+            }
+            mtx_file.lock();
+            if (file.eof()) {
+                file.close();
+                int index = nroArchivo.fetch_add(1);
+                if (index < filePaths.size()){
+                    std::cout << "Abrimos "<< index << " archivo" << std::endl;
+                    file.clear();
+                    file.open(filePaths[index], file.in);
+                }
+                else {
+                    mtx_file.unlock();
+                    continue;
+                }
+            }
+            std::cout << "salimos en el lock del file" << std::endl;
+            mtx_file.unlock();
+        }
+        return 0;
 
+        });
+        i++;
+    }
     for (auto &t : threads){
         t.join();
     }

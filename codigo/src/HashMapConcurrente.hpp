@@ -20,6 +20,11 @@ class HashMapConcurrente {
     void incrementar(std::string clave);
     std::vector<std::string> claves();
     unsigned int valor(std::string clave);
+    
+
+    std::mutex mtxIncMax;
+    std::mutex mtx[HashMapConcurrente::cantLetras]; // Chequear
+    bool ejecutandoMax = false;
 
     hashMapPair maximo();
     hashMapPair maximoParalelo(unsigned int cantThreads);
