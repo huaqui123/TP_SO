@@ -84,10 +84,11 @@ void cargarMultiplesArchivos(
         std::cerr << "Error al abrir el archivo '" << filePaths[0] << "'" << std::endl;
     }
     std::atomic<int> nroArchivo{1};
+    std::atomic<int> a{1};
     while (i < threads.size()){
-        threads[i] = std::thread([=, &hashMap, &mtx_file, &nroArchivo, &file] (){
+        threads[i] = std::thread([=, &hashMap, &mtx_file, &nroArchivo, &file, &filePaths, &a] (){
         std::string palabraActual;
-        while(nroArchivo.load() < filePaths.size()){
+        while(nroArchivo.load() - 1 < filePaths.size()){
             while (file >> palabraActual) {
                 hashMap.incrementar(palabraActual);
             }
@@ -96,19 +97,12 @@ void cargarMultiplesArchivos(
                 file.close();
                 int index = nroArchivo.fetch_add(1);
                 if (index < filePaths.size()){
-                    std::cout << "Abrimos "<< index << " archivo" << std::endl;
                     file.clear();
                     file.open(filePaths[index], file.in);
                 }
-                else {
-                    mtx_file.unlock();
-                    continue;
-                }
             }
-            std::cout << "salimos en el lock del file" << std::endl;
             mtx_file.unlock();
         }
-        return 0;
 
         });
         i++;

@@ -44,19 +44,19 @@ void HashMapConcurrente::incrementar(std::string clave) {
         mtxIncMax.lock();
         l -> insertar(par);
         mtxIncMax.unlock();
-        mtx[index].unlock();
+        //mtx[index].unlock();
     } else {
-        mtx[index].unlock();
+        //mtx[index].unlock();
         bool exit = false;
         auto iter = l -> begin();
         for (unsigned int i = 0; i < l -> longitud(); i++) {
             if (iter.operator*().first == clave) {
-                mtx[index].lock();
+                //mtx[index].lock();
                 //while(ejecutandoMax){} // Nos genera busy waiting, usamos el mtxIncMax
                 mtxIncMax.lock();
                 iter.operator*().second += 1;
                 mtxIncMax.unlock();
-                mtx[index].unlock();
+                //mtx[index].unlock();
                 exit = true;
             }
             if (exit)
@@ -64,14 +64,15 @@ void HashMapConcurrente::incrementar(std::string clave) {
             iter.operator++();
         }
         if (!exit) {
-            mtx[index].lock();
+            //mtx[index].lock();
             //while(ejecutandoMax){} // Nos genera busy waiting, usamos el mtxIncMax
             mtxIncMax.lock();
             l -> insertar(par);
             mtxIncMax.unlock();
-            mtx[index].unlock();
+            //mtx[index].unlock();
         }
     }
+    mtx[index].unlock();
     return;
 
 }
